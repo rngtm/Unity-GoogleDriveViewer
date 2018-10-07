@@ -126,13 +126,13 @@ namespace GoogleDriveViewer
             IOrderedEnumerable<FileTreeViewItem> orderedEnumerable;
             switch (index)
             {
-                case 1:
+                case 0:
                     orderedEnumerable = ascending ? items.OrderBy(item => item.FileName) : items.OrderByDescending(item => item.FileName);
                     break;
-                case 2:
+                case 1:
                     orderedEnumerable = ascending ? items.OrderBy(item => item.FileId) : items.OrderByDescending(item => item.FileId);
                     break;
-                case 3:
+                case 2:
                     orderedEnumerable = ascending ? items.OrderBy(item => item.MimeType) : items.OrderByDescending(item => item.MimeType);
                     break;
                 default:
