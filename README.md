@@ -1,6 +1,8 @@
 # Unity-GoogleDriveViewer
 Unity-GoogleDriveViewer is a tool to list GoogleDrive files.
 
+<img src = "Demo/preview.png">
+
 ## Unity version
 Unity 2018.3.x
 
