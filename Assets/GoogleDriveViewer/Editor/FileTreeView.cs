@@ -202,8 +202,7 @@ namespace GoogleDriveViewer
                 );
             if (!ok) { return; }
 
-            var s = DriveAPI.DeleteFile(item.FileId);
-            Debug.Log(s);
+            DriveAPI.DeleteFile(item.FileId);
             Debug.LogFormat("Delete : {0}", item.FileId);
 
             ClearTreeItems();
