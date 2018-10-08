@@ -28,33 +28,16 @@ namespace GoogleDriveViewer
             { EMediaType.EXCEL, "application/vnd.google-apps.spreadsheet" }
         };
 
-
         public static string GetContentType(EMediaType type)
         {
-            string result = "";
-            switch (type)
+            if (MediaToContentType.ContainsKey(type))
             {
-                case EMediaType.PNG:
-                    result = "image/png";
-                    break;
-                case EMediaType.MP4:
-                    result = "video/mp4";
-                    break;
-                case EMediaType.EXCEL:
-                    result = "application/vnd.ms-excel";
-                    break;
+                return MediaToContentType[type];
             }
-
-            return result;
-
-            //if (MediaToContentType.ContainsKey(type))
-            //{
-            //    return MediaToContentType[type];
-            //}
-            //else
-            //{
-            //    throw new System.NotSupportedException();
-            //}
+            else
+            {
+                throw new System.NotSupportedException();
+            }
         }
 
         public static string GetMimeType(EMediaType type)
