@@ -21,6 +21,12 @@ namespace GoogleDriveViewer
             return string.Format("https://drive.google.com/open?id={0}", fileId);
         }
 
+        public static string DeleteFile(string fileId)
+        {
+            FilesResource.DeleteRequest request = OpenDrive().Files.Delete(fileId);
+            return request.Execute();
+        }
+
         public static string UploadFile(EMediaType type, string uploadName, string filePath)
         {
             DriveService drive = OpenDrive();

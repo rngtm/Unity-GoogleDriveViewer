@@ -20,7 +20,7 @@ namespace GoogleDriveViewer
         [SerializeField] private string m_FileId = "";
         [SerializeField] private string m_FileURL = "";
 
-        [MenuItem("GoogleDrive/File Uploader")]
+        [MenuItem("GoogleDrive/File Uploader", false, 3)]
         static void Open()
         {
             var window = GetWindow<GoogleDriveUploader>("GoogleDriveViewer");
@@ -37,12 +37,12 @@ namespace GoogleDriveViewer
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Upload Name", LabelLayoutOption);
-            m_UploadName = EditorGUILayout.TextField(m_UploadName, EmptyLayoutOption);
+            m_UploadName = EditorGUILayout.DelayedTextField(m_UploadName, EmptyLayoutOption);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("File Path", LabelLayoutOption);
-            m_FilePath = EditorGUILayout.TextField(m_FilePath, EmptyLayoutOption);
+            m_FilePath = EditorGUILayout.DelayedTextField(m_FilePath, EmptyLayoutOption);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();

@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
-using File = Google.Apis.Drive.v3.Data.File;    
+using File = Google.Apis.Drive.v3.Data.File;
 
 namespace GoogleDriveViewer
 {
@@ -12,7 +12,7 @@ namespace GoogleDriveViewer
     {
         public string FileName = "-";
         public string FileId = "-";
-        public string MimeType = "-"; 
+        public string MimeType = "-";
     }
 
     internal class FileTreeView : TreeView
@@ -24,6 +24,7 @@ namespace GoogleDriveViewer
         static readonly string SortedColumnIndexStateKey = "AssetStoreImporterTreeView_sortedColumnIndex";
         static readonly int DefaultSortedColumnIndex = 1;
         public IReadOnlyList<TreeViewItem> CurrentBindingItems;
+        private Action<int> m_DeleteFileAction;
 
         public FileTreeView() // constructer
             : this(new TreeViewState(), new MultiColumnHeader(new MultiColumnHeaderState(new[]
@@ -51,6 +52,15 @@ namespace GoogleDriveViewer
             Reload();
 
             header.sortedColumnIndex = SessionState.GetInt(SortedColumnIndexStateKey, DefaultSortedColumnIndex);
+        }
+
+        public void ReloadFiles()
+        {
+            var files = DriveAPI.GetFiles();
+            if (files != null && files.Count > 0)
+            {
+                RegisterFiles(files);
+            }
         }
 
         protected override void RowGUI(RowGUIArgs args) // draw gui
@@ -94,6 +104,7 @@ namespace GoogleDriveViewer
             return root;
         }
 
+
         public void RegisterFiles(IList<File> files)
         {
             var root = new TreeViewItem { depth = -1 };
@@ -114,6 +125,17 @@ namespace GoogleDriveViewer
             root.children = CurrentBindingItems as List<TreeViewItem>;
             Reload();
         }
+
+        public void ClearTreeItems()
+        {
+            var root = new TreeViewItem { depth = -1 };
+            var children = new List<TreeViewItem>();
+
+            CurrentBindingItems = children;
+            root.children = CurrentBindingItems as List<TreeViewItem>;
+            Reload();
+        }
+
 
         private void Header_sortingChanged(MultiColumnHeader multiColumnHeader)
         {
@@ -141,6 +163,77 @@ namespace GoogleDriveViewer
 
             CurrentBindingItems = rootItem.children = orderedEnumerable.Cast<TreeViewItem>().ToList();
             BuildRows(rootItem);
+        }
+
+        public void RegisterDeleteFileAction(Action<int> action)
+        {
+            m_DeleteFileAction = action;
+        }
+
+        protected override void ContextClickedItem(int id)
+        {
+            base.ContextClickedItem(id);
+            var selection = GetSelection();
+            if (selection.Count == 0) { return; }
+
+            GenericMenu menu = new GenericMenu();
+            menu.AddItem(new GUIContent("ファイルを削除"), false, () =>
+            {
+                bool ok;
+                if (selection.Count == 1)
+                {
+                    TryDeleteFile(id);
+                }
+                else
+                {
+                    TryDeleteFiles(selection);
+                }
+            });
+            menu.ShowAsContext();
+        }
+
+        private void TryDeleteFile(int id)
+        {
+            var item = (FileTreeViewItem)GetRows()[id];
+            bool ok = EditorUtility.DisplayDialog(
+                "ファイルの削除",
+                string.Format("ファイル \'{0}\'を削除しますか? \n(ファイルID :{1})", item.FileName, item.FileId),
+                "削除する", "やめる"
+                );
+            if (!ok) { return; }
+
+            var s = DriveAPI.DeleteFile(item.FileId);
+            Debug.Log(s);
+            Debug.LogFormat("Delete : {0}", item.FileId);
+
+            ClearTreeItems();
+            EditorApplication.delayCall += () =>
+            {
+                ReloadFiles();
+            };
+        }
+
+        private void TryDeleteFiles(IList<int> ids)
+        {
+            bool ok = EditorUtility.DisplayDialog(
+                "ファイルの削除",
+                string.Format("{0}個のファイルを削除しますか? ", ids.Count),
+                "削除する", "やめる"
+                );
+            if (!ok) { return; }
+
+            foreach (var id in ids)
+            {
+                var item = (FileTreeViewItem)GetRows()[id];
+                DriveAPI.DeleteFile(item.FileId);
+                Debug.LogFormat("Delete: {0} ({1})", item.FileName, item.FileId);
+            }
+
+            ClearTreeItems();
+            EditorApplication.delayCall += () =>
+            {
+                ReloadFiles();
+            };
         }
     }
 }

@@ -8,7 +8,7 @@ namespace GoogleDriveViewer
         FileTreeView m_TreeView;
         Vector2 m_TableScroll = new Vector2(0f, 0f);
 
-        [MenuItem("GoogleDrive/GoogleDrive Viewer")]
+        [MenuItem("GoogleDrive/File Viewer", false, 2)]
         static void Open()
         {
             GetWindow<GoogleDriveViewerWindow>("GoogleDriveViewer");
@@ -30,14 +30,19 @@ namespace GoogleDriveViewer
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             if (GUILayout.Button("GET Files", EditorStyles.toolbarButton))
             {
-                var files = DriveAPI.GetFiles();
-
-                if (files != null && files.Count > 0)
-                {
-                    m_TreeView.RegisterFiles(files);
-                }
+                m_TreeView.ReloadFiles();
             }
             GUILayout.FlexibleSpace();
+            //if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
+            //{
+            //    m_TreeView.ClearTreeItems();
+            //}
+
+            if (GUILayout.Button("GoogleDrive", EditorStyles.toolbarButton))
+            {
+                System.Diagnostics.Process.Start(@"https://drive.google.com/drive/");
+            }
+
             EditorGUILayout.EndHorizontal();
         }
 
