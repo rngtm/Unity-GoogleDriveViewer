@@ -15,7 +15,6 @@ namespace GoogleDriveViewer
 {
     public class DriveAPI
     {
-
         public static string GetFileURL(string fileId)
         {
             return string.Format("https://drive.google.com/open?id={0}", fileId);
@@ -63,7 +62,7 @@ namespace GoogleDriveViewer
                     "user",
                     CancellationToken.None,
                     new FileDataStore(credPath, true)).Result;
-                Console.WriteLine("Credential file saved to: " + credPath);
+                UnityEngine.Debug.Log("Credential file saved to: " + credPath);
             }
 
             // Create Drive API service.

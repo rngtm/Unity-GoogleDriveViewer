@@ -2,6 +2,7 @@
 using UnityEditor;
 using Path = System.IO.Path;
 using Google.Apis.Drive.v3;
+using System.Threading.Tasks;
 
 namespace GoogleDriveViewer
 {
@@ -19,6 +20,7 @@ namespace GoogleDriveViewer
         [SerializeField] private EMediaType m_MediaType;
         [SerializeField] private string m_FileId = "";
         [SerializeField] private string m_FileURL = "";
+        private bool m_IsUploading = false;
 
         [MenuItem("GoogleDrive/File Uploader", false, 3)]
         static void Open()
@@ -35,14 +37,16 @@ namespace GoogleDriveViewer
 
         private void OnGUI()
         {
+            EditorGUI.BeginDisabledGroup(m_IsUploading);
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Upload Name", LabelLayoutOption);
-            m_UploadName = EditorGUILayout.DelayedTextField(m_UploadName, EmptyLayoutOption);
+            m_UploadName = EditorGUILayout.TextField(m_UploadName, EmptyLayoutOption);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("File Path", LabelLayoutOption);
-            m_FilePath = EditorGUILayout.DelayedTextField(m_FilePath, EmptyLayoutOption);
+            m_FilePath = EditorGUILayout.TextField(m_FilePath, EmptyLayoutOption);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
@@ -51,10 +55,9 @@ namespace GoogleDriveViewer
             EditorGUILayout.EndHorizontal();
 
             DrawUploadButton();
-
             GUILayout.Space(16f);
-
             DrawUploadResponse();
+            EditorGUI.EndDisabledGroup();
         }
 
         private void DrawUploadResponse()
@@ -101,7 +104,6 @@ namespace GoogleDriveViewer
             EditorGUILayout.EndHorizontal();
         }
 
-
         private void DrawHeader()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
@@ -119,14 +121,30 @@ namespace GoogleDriveViewer
             {
                 if (System.IO.File.Exists(m_FilePath))
                 {
-                    m_FileId = DriveAPI.UploadFile(m_MediaType, m_UploadName, m_FilePath);
-                    m_FileURL = DriveAPI.GetFileURL(m_FileId);
+                    UploadFileAsync();
+                    //m_FileId = DriveAPI.UploadFile(m_MediaType, m_UploadName, m_FilePath);
+                    //m_FileURL = DriveAPI.GetFileURL(m_FileId);
                 }
                 else
                 {
                     throw new System.Exception(string.Format("File not found : {0}", m_FilePath));
                 }
             }
+        }
+
+        private async void UploadFileAsync()
+        {
+            m_IsUploading = true;
+            m_FileId = "";
+            m_FileURL = "";
+
+            await Task.Run(() =>
+            {
+                m_FileId = DriveAPI.UploadFile(m_MediaType, m_UploadName, m_FilePath);
+                m_FileURL = DriveAPI.GetFileURL(m_FileId);
+            });
+            Repaint();
+            m_IsUploading = false;
         }
 
         private void DrawOpenURLButton()
