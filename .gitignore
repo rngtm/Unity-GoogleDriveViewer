@@ -47,6 +47,8 @@ Thumbs.db
 # ============ #
 Assets/Local/
 Assets/Local.meta
+credentials.json
+credentials.json.meta
 
 *.log #log files, for some plugins
 *.pyc #python bytecode cache, for some plugins.
