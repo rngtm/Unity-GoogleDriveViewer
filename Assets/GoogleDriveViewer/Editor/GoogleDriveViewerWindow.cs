@@ -3,7 +3,7 @@ using UnityEditor;
 
 namespace GoogleDriveViewer
 {
-    public class GoogleDriveWindow : EditorWindow
+    public class GoogleDriveViewerWindow : EditorWindow
     {
         FileTreeView m_TreeView;
         Vector2 m_TableScroll = new Vector2(0f, 0f);
@@ -11,7 +11,7 @@ namespace GoogleDriveViewer
         [MenuItem("GoogleDrive/GoogleDrive Viewer")]
         static void Open()
         {
-            GetWindow<GoogleDriveWindow>("GoogleDriveViewer");
+            GetWindow<GoogleDriveViewerWindow>("GoogleDriveViewer");
         }
 
         private void OnGUI()
