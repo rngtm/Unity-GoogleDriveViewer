@@ -162,6 +162,14 @@ namespace GoogleDriveViewer
             }
 
             CurrentBindingItems = rootItem.children = orderedEnumerable.Cast<TreeViewItem>().ToList();
+
+            int id = 0;
+            foreach (var child in CurrentBindingItems)
+            {
+                child.id = id;
+                id++;
+            }
+
             BuildRows(rootItem);
         }
 
