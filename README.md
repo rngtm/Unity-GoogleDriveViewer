@@ -20,10 +20,9 @@ Change scripting runtime version to **".NET 4.x Equivalennt"**
 <img src = "Demo/settings.png">
 
 # How to use
+Select **"GoogleDrive/File Viewer"**.
 
-Select **"GoogleDrive/GoogleDrive Viewer"**.
-
-<img src = "Demo/open_window.png">
+<img src = "Demo/open_viewer.png">
 
 
 <br>
