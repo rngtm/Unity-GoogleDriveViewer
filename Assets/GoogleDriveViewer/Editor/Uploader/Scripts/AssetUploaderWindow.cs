@@ -91,7 +91,7 @@ namespace GoogleDriveViewer
             if (m_UploadAsset != null)
             {
                 var assetPath = AssetDatabase.GetAssetPath(m_UploadAsset);
-                m_MediaType = MediaSettings.GetMediaType(assetPath);
+                m_MediaType = MediaSettings.GetMediaFromPath(assetPath);
             }
             else
             {
@@ -173,7 +173,7 @@ namespace GoogleDriveViewer
             var filePath = AssetDatabase.GetAssetPath(m_UploadAsset);
             await Task.Run(() =>
             {
-                var mediaType = MediaSettings.GetMediaType(filePath);
+                var mediaType = MediaSettings.GetMediaFromPath(filePath);
                 m_FileId = DriveAPI.UploadFile(mediaType, m_UploadName, filePath);
                 m_FileURL = DriveAPI.GetFileURL(m_FileId);
             });

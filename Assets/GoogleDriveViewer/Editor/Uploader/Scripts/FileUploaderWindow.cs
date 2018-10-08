@@ -40,7 +40,7 @@ namespace GoogleDriveViewer
         {
             if (!string.IsNullOrEmpty(m_FilePath))
             {
-                m_MediaType = MediaSettings.GetMediaType(m_FilePath);
+                m_MediaType = MediaSettings.GetMediaFromPath(m_FilePath);
             }
             else
             {

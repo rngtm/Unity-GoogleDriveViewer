@@ -10,6 +10,7 @@ using System.Threading;
 using File = Google.Apis.Drive.v3.Data.File;
 using Debug = UnityEngine.Debug;
 using Google.Apis.Download;
+using System.Threading.Tasks;
 
 namespace GoogleDriveViewer
 {
@@ -26,6 +27,43 @@ namespace GoogleDriveViewer
             return request.Execute();
         }
 
+        public static async Task DownloadFileAsync(string fileId, string savePath)
+        {
+            // フォルダ「HogeFolder」下のファイル一覧を取得する
+            var service = OpenDrive();
+
+            //ファイルをダウンロードする
+            var getRequest = service.Files.Get(fileId);
+
+            //var fs = new System.IO.FileStream(savePath, System.IO.FileMode.Create, System.IO.FileAccess.Write);
+            using (var fs = new System.IO.FileStream(savePath, System.IO.FileMode.Create, System.IO.FileAccess.Write))
+            {
+                await getRequest.DownloadAsync(fs);
+            }
+            //fs.Dispose();
+        }
+
+        public static async void CreateFileAsync(string filePath, long data)
+        {
+            await Task.Run(() =>
+            {
+                CreateFile(filePath, data);
+            });
+        }
+
+        private static void CreateFile(string filePath, long data)
+        {
+            FileStream fs = new FileStream(filePath, FileMode.Create);
+            BinaryWriter bw = new BinaryWriter(fs);
+            bw.Write(data);
+
+            bw.Close();
+            fs.Close();
+
+            Debug.LogFormat("Save to {0}", filePath);
+            Process.Start(System.IO.Directory.GetParent(filePath).FullName);
+        }
+
         public static string UploadFile(EMediaType type, string uploadName, string filePath)
         {
             DriveService drive = OpenDrive();
@@ -34,7 +72,7 @@ namespace GoogleDriveViewer
             File body = new File();
             body.Name = uploadName;
             body.Description = "test upload";
-            body.MimeType = MediaSettings.GetContentType(type);
+            body.MimeType = MediaSettings.GetLocalMimeFromMedia(type);
             body.Parents = new List<string>
             {
             };
@@ -81,7 +119,7 @@ namespace GoogleDriveViewer
             MemoryStream stream = new MemoryStream(byteArray);
             try
             {
-                var request = service.Files.Create(body, stream, MediaSettings.GetMimeType(type)); // https://developers.google.com/drive/api/v3/mime-types
+                var request = service.Files.Create(body, stream, MediaSettings.GetLocalMimeFromMedia(type)); // https://developers.google.com/drive/api/v3/mime-types
                 request.Upload();
 
                 File file = request.ResponseBody;

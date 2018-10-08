@@ -21,7 +21,7 @@ namespace GoogleDriveViewer
                 m_TreeView = new FileTreeView();
             }
 
-            EditorGUI.BeginDisabledGroup(m_TreeView.IsGettingFiles | m_TreeView.IsDeletingFiles);
+            EditorGUI.BeginDisabledGroup(m_TreeView.IsGettingFile | m_TreeView.IsDeletingFile | m_TreeView.IsDownloadingFile);
             DrawHeader();
             CustomUI.RenderTable(m_TreeView, ref m_TableScroll);
             EditorGUI.EndDisabledGroup();

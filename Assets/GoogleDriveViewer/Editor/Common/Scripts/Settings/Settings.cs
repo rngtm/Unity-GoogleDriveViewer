@@ -2,6 +2,17 @@
 
 namespace GoogleDriveViewer
 {
+    public static class DownloadSettings
+    {
+        /// <summary>
+        /// ファイルダウンロード先のフォルダ
+        /// </summary>
+        public static string GetDownloadFolderPath()
+        {
+            return UnityEngine.Application.dataPath; // Assets直下
+        }
+    }
+
     internal static class Settings
     {
         /// <summary>
@@ -21,5 +32,6 @@ namespace GoogleDriveViewer
         public readonly static string CREDENTIAL_PATH = ".credentials/drive-dotnet-Demo";
 
         public readonly static string[] Scopes = { DriveService.Scope.Drive };
+
     }
 }

@@ -26,11 +26,9 @@ namespace GoogleDriveViewer
         static readonly string SortedColumnIndexStateKey = "AssetStoreImporterTreeView_sortedColumnIndex";
         static readonly int DefaultSortedColumnIndex = 1;
         public IReadOnlyList<TreeViewItem> CurrentBindingItems;
-        private bool m_IsGettingFiles = false;
-        private bool m_IsDeletingFiles = false;
-
-        public bool IsGettingFiles => m_IsGettingFiles;
-        public bool IsDeletingFiles => m_IsDeletingFiles;
+        public bool IsGettingFile { get; private set; }
+        public bool IsDeletingFile { get; private set; }
+        public bool IsDownloadingFile { get; private set; }
 
         public FileTreeView() // constructer
             : this(new TreeViewState(), new MultiColumnHeader(new MultiColumnHeaderState(new[]
@@ -40,7 +38,6 @@ namespace GoogleDriveViewer
                 new MultiColumnHeaderState.Column() { headerContent = new GUIContent("Id"),
                 },
                 new MultiColumnHeaderState.Column() { headerContent = new GUIContent("MimeType"),
-                    width = 40f,
                 },
             })))
         {
@@ -62,7 +59,7 @@ namespace GoogleDriveViewer
 
         public async void ReloadFilesAsync()
         {
-            m_IsGettingFiles = true;
+            IsGettingFile = true;
 
             await Task.Run(() =>
             {
@@ -73,7 +70,7 @@ namespace GoogleDriveViewer
                 }
             });
 
-            m_IsGettingFiles = false;
+            IsGettingFile = false;
             SetSelection(new int[0]); // cancel selection
 
             Repaint();
@@ -202,18 +199,28 @@ namespace GoogleDriveViewer
 
             GenericMenu menu = new GenericMenu();
 
-            menu.AddItem(new GUIContent("IDのコピー"), false, () =>
-            {
-                var item = (FileTreeViewItem)GetRows()[id];
-                GUIUtility.systemCopyBuffer = item.FileId;
-            });
             menu.AddItem(new GUIContent("ファイルを開く"), false, () =>
             {
                 var item = (FileTreeViewItem)GetRows()[id];
                 var openURL = DriveAPI.GetFileURL(item.FileId);
                 System.Diagnostics.Process.Start(openURL);
             });
+            menu.AddItem(new GUIContent("ファイルをダウンロード"), false, () =>
+            {
+                DownloadFileAsync(id);
+            });
+            menu.AddSeparator("");
 
+            menu.AddItem(new GUIContent("コピー/ID"), false, () =>
+            {
+                var item = (FileTreeViewItem)GetRows()[id];
+                GUIUtility.systemCopyBuffer = item.FileId;
+            });
+            menu.AddItem(new GUIContent("コピー/MimeType"), false, () =>
+            {
+                var item = (FileTreeViewItem)GetRows()[id];
+                GUIUtility.systemCopyBuffer = item.MimeType;
+            });
             menu.AddSeparator("");
 
             menu.AddItem(new GUIContent("ファイルを削除"), false, () =>
@@ -232,15 +239,33 @@ namespace GoogleDriveViewer
             menu.ShowAsContext();
         }
 
+        private async void DownloadFileAsync(int id)
+        {
+            var item = (FileTreeViewItem)GetRows()[id];
+            var mediaType = MediaSettings.GetMediaFromRemoteMime(item.MimeType);
+            var fileExt = MediaSettings.GetExtensionFromMedia(mediaType);
+            var fileName = item.FileName + fileExt;
+            var savePath = System.IO.Path.Combine(DownloadSettings.GetDownloadFolderPath(), fileName);
+
+            IsDownloadingFile = true;
+            Debug.Log("Download start: " + fileName);
+            await DriveAPI.DownloadFileAsync(item.FileId, savePath);
+            Debug.Log("Download end");
+            IsDownloadingFile = false;
+
+            Debug.LogFormat("File saved to: {0}", savePath);
+            AssetDatabase.Refresh();
+            System.Diagnostics.Process.Start(DownloadSettings.GetDownloadFolderPath()); // ダウンロード先を開く
+        }
+
         private async void DeleteAsync(IList<int> ids)
         {
-            m_IsDeletingFiles = true;
-
+            IsDeletingFile = true;
             await Task.Run(() =>
             {
                 TryDeleteFiles(ids); // 複数削除
             });
-            m_IsDeletingFiles = false;
+            IsDeletingFile = false;
         }
 
         private void TryDeleteFiles(IList<int> ids)
