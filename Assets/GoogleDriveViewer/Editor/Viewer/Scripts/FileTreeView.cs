@@ -244,16 +244,19 @@ namespace GoogleDriveViewer
             var item = (FileTreeViewItem)GetRows()[id];
             var mediaType = MediaSettings.GetMediaFromRemoteMime(item.MimeType);
             var fileExt = MediaSettings.GetExtensionFromMedia(mediaType);
-            var fileName = item.FileName + fileExt;
+            var fileName = item.FileName;
+            if (!string.Equals(System.IO.Path.GetExtension(fileName), fileExt))
+            {
+                fileName += fileExt;
+            }
             var savePath = System.IO.Path.Combine(DownloadSettings.GetDownloadFolderPath(), fileName);
 
             IsDownloadingFile = true;
             Debug.Log("Download start: " + fileName);
             await DriveAPI.DownloadFileAsync(item.FileId, savePath);
-            Debug.Log("Download end");
             IsDownloadingFile = false;
 
-            Debug.LogFormat("File saved to: {0}", savePath);
+            Debug.LogFormat("Download end: File saved to: {0}", savePath);
             AssetDatabase.Refresh();
             System.Diagnostics.Process.Start(DownloadSettings.GetDownloadFolderPath()); // ダウンロード先を開く
         }
