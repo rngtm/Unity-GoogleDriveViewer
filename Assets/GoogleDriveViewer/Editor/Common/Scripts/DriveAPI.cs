@@ -29,18 +29,12 @@ namespace GoogleDriveViewer
 
         public static async Task DownloadFileAsync(string fileId, string savePath)
         {
-            // フォルダ「HogeFolder」下のファイル一覧を取得する
             var service = OpenDrive();
-
-            //ファイルをダウンロードする
             var getRequest = service.Files.Get(fileId);
-
-            //var fs = new System.IO.FileStream(savePath, System.IO.FileMode.Create, System.IO.FileAccess.Write);
             using (var fs = new System.IO.FileStream(savePath, System.IO.FileMode.Create, System.IO.FileAccess.Write))
             {
                 await getRequest.DownloadAsync(fs);
             }
-            //fs.Dispose();
         }
 
         public static async void CreateFileAsync(string filePath, long data)
