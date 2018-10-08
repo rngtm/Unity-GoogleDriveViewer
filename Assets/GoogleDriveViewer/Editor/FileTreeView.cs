@@ -201,6 +201,21 @@ namespace GoogleDriveViewer
             base.ContextClickedItem(id);
 
             GenericMenu menu = new GenericMenu();
+
+            menu.AddItem(new GUIContent("IDのコピー"), false, () =>
+            {
+                var item = (FileTreeViewItem)GetRows()[id];
+                GUIUtility.systemCopyBuffer = item.FileId;
+            });
+            menu.AddItem(new GUIContent("ファイルを開く"), false, () =>
+            {
+                var item = (FileTreeViewItem)GetRows()[id];
+                var openURL = DriveAPI.GetFileURL(item.FileId);
+                System.Diagnostics.Process.Start(openURL);
+            });
+
+            menu.AddSeparator("");
+
             menu.AddItem(new GUIContent("ファイルを削除"), false, () =>
             {
                 var ids = GetSelection();
