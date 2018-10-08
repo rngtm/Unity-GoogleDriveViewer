@@ -179,15 +179,16 @@ namespace GoogleDriveViewer
             GenericMenu menu = new GenericMenu();
             menu.AddItem(new GUIContent("ファイルを削除"), false, () =>
             {
-                bool ok;
-                if (selection.Count == 1)
-                {
-                    TryDeleteFile(id);
-                }
-                else
-                {
-                    TryDeleteFiles(selection);
-                }
+                TryDeleteFile(id);
+
+                //if (selection.Count == 1)
+                //{
+                //    TryDeleteFile(id);
+                //}
+                //else
+                //{
+                //    TryDeleteFiles(selection); // 複数削除
+                //}
             });
             menu.ShowAsContext();
         }

@@ -33,10 +33,6 @@ namespace GoogleDriveViewer
                 m_TreeView.ReloadFiles();
             }
             GUILayout.FlexibleSpace();
-            //if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
-            //{
-            //    m_TreeView.ClearTreeItems();
-            //}
 
             if (GUILayout.Button("GoogleDrive", EditorStyles.toolbarButton))
             {
