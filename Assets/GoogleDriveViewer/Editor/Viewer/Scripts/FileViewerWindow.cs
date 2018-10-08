@@ -8,10 +8,10 @@ namespace GoogleDriveViewer
         FileTreeView m_TreeView;
         Vector2 m_TableScroll = new Vector2(0f, 0f);
 
-        [MenuItem("GoogleDrive/File Viewer", false, 2)]
+        [MenuItem(EditorSettings.MENU_TEXT_FILE_VIEWER, false, EditorSettings.MENU_ORDER_FILE_VIEWER)]
         static void Open()
         {
-            GetWindow<GoogleDriveViewerWindow>("GoogleDriveViewer");
+            GetWindow<GoogleDriveViewerWindow>(EditorSettings.WINDOW_TITLE_FILE_VIEWER);
         }
 
         private void OnGUI()

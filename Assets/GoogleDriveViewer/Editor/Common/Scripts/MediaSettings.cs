@@ -6,12 +6,13 @@ namespace GoogleDriveViewer
 {
     public enum EMediaType
     {
-        PNG,
+        UNKNOWN = -1,
+        PNG = 0,
         EXCEL,
         MP4,
     }
 
-    internal static class MediaSettings
+    public static class MediaSettings
     {
         static Dictionary<EMediaType, string> MediaToContentType = new Dictionary<EMediaType, string>
         {
@@ -28,6 +29,23 @@ namespace GoogleDriveViewer
             { EMediaType.EXCEL, "application/vnd.google-apps.spreadsheet" }
         };
 
+        static Dictionary<string, EMediaType> ExtensionToMedia = new Dictionary<string, EMediaType>
+        {
+            { ".png", EMediaType.PNG },
+            { ".mp4", EMediaType.MP4 },
+            { ".xlsx", EMediaType.EXCEL },
+        };
+
+        public static EMediaType GetMediaType(string filePath)
+        {
+            var ext = System.IO.Path.GetExtension(filePath);
+            if (!ExtensionToMedia.ContainsKey(ext))
+            {
+                return EMediaType.UNKNOWN;
+            }
+            return ExtensionToMedia[ext];
+        }
+
         public static string GetContentType(EMediaType type)
         {
             if (MediaToContentType.ContainsKey(type))
@@ -36,7 +54,8 @@ namespace GoogleDriveViewer
             }
             else
             {
-                throw new System.NotSupportedException();
+                throw new System.NotSupportedException(
+                    string.Format("unknown type : {0}", type));
             }
         }
 
@@ -48,7 +67,8 @@ namespace GoogleDriveViewer
             }
             else
             {
-                throw new System.NotSupportedException();
+                throw new System.NotSupportedException(
+                    string.Format("unknown type : {0}", type));
             }
         }
     }

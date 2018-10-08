@@ -5,7 +5,7 @@ using UnityEditor.IMGUI.Controls;
 
 namespace GoogleDriveViewer
 {
-    internal static class CustomUI
+    public static class CustomUI
     {
         private static GUIStyle m_TableListStyle;
 

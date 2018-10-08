@@ -1,0 +1,14 @@
+{
+    "name": "GoogleDriveViewer.Uploader",
+    "references": [
+        "GoogleDriveViewer.Common"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

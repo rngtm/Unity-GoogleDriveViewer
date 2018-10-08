@@ -1,12 +1,13 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using Path = System.IO.Path;
 using Google.Apis.Drive.v3;
 using System.Threading.Tasks;
+using System.Linq;
+using System.IO;
 
 namespace GoogleDriveViewer
 {
-    public class GoogleDriveUploader : EditorWindow
+    public class AssetUploaderWindow : EditorWindow
     {
         readonly static string[] Scopes = { DriveService.Scope.Drive };
 
@@ -16,48 +17,86 @@ namespace GoogleDriveViewer
         readonly GUILayoutOption[] OpenURLButtonLayoutOption = new GUILayoutOption[] { GUILayout.Width(90), };
 
         [SerializeField] private string m_UploadName;
-        [SerializeField] private string m_FilePath;
-        [SerializeField] private EMediaType m_MediaType;
+        [SerializeField] private Object m_UploadAsset;
         [SerializeField] private string m_FileId = "";
         [SerializeField] private string m_FileURL = "";
+        private EMediaType m_MediaType = EMediaType.UNKNOWN;
         private bool m_IsUploading = false;
 
-        [MenuItem("GoogleDrive/File Uploader", false, 3)]
+        [MenuItem(EditorSettings.MENU_TEXT_ASSET_UPLOADER, false, EditorSettings.MENU_ORDER_ASSET_UPLOADER)]
         static void Open()
         {
-            var window = GetWindow<GoogleDriveUploader>("GoogleDriveViewer");
-            window.m_UploadName = "Test Upload PNG";
-            window.m_MediaType = EMediaType.PNG;
-            window.m_FilePath = Application.dataPath
+            var window = GetWindow<AssetUploaderWindow>(EditorSettings.WINDOW_TITLE_ASSET_UPLOADER);
+
+            window.m_UploadName = "Test Upload Asset";
+            var defaultAssetPath = "Assets"
                 + Path.DirectorySeparatorChar + "GoogleDriveViewer"
                 + Path.DirectorySeparatorChar + "Sample"
                 + Path.DirectorySeparatorChar + "sample.png"
                 ;
+            window.m_UploadAsset = AssetDatabase.LoadAssetAtPath(defaultAssetPath, typeof(Object));
+            window.UpdateMediaType();
         }
 
         private void OnGUI()
         {
             EditorGUI.BeginDisabledGroup(m_IsUploading);
 
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Upload Name", LabelLayoutOption);
-            m_UploadName = EditorGUILayout.TextField(m_UploadName, EmptyLayoutOption);
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("File Path", LabelLayoutOption);
-            m_FilePath = EditorGUILayout.TextField(m_FilePath, EmptyLayoutOption);
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("File Type", LabelLayoutOption);
-            m_MediaType = (EMediaType)EditorGUILayout.EnumPopup(m_MediaType, EmptyLayoutOption);
-            EditorGUILayout.EndHorizontal();
+            DrawRegisterNameField();
+            DrawRegisterAssetField();
+            DrawMediaType();
 
             DrawUploadButton();
             GUILayout.Space(16f);
             DrawUploadResponse();
             EditorGUI.EndDisabledGroup();
+        }
+
+        private void OnFocus()
+        {
+            UpdateMediaType();
+        }
+
+        private void DrawMediaType()
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("File Type", LabelLayoutOption);
+            EditorGUILayout.LabelField(m_MediaType.ToString());
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawRegisterNameField()
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Upload Name", LabelLayoutOption);
+            m_UploadName = EditorGUILayout.TextField(m_UploadName, EmptyLayoutOption);
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawRegisterAssetField()
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Upload Asset", LabelLayoutOption);
+            EditorGUI.BeginChangeCheck();
+            m_UploadAsset = EditorGUILayout.ObjectField(m_UploadAsset, typeof(Object), false);
+            if (EditorGUI.EndChangeCheck())
+            {
+                UpdateMediaType();
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void UpdateMediaType()
+        {
+            if (m_UploadAsset != null)
+            {
+                var assetPath = AssetDatabase.GetAssetPath(m_UploadAsset);
+                m_MediaType = MediaSettings.GetMediaType(assetPath);
+            }
+            else
+            {
+                m_MediaType = EMediaType.UNKNOWN;
+            }
         }
 
         private void DrawUploadResponse()
@@ -117,19 +156,12 @@ namespace GoogleDriveViewer
 
         private void DrawUploadButton()
         {
+            EditorGUI.BeginDisabledGroup(m_MediaType == EMediaType.UNKNOWN);
             if (GUILayout.Button("アップロード", EmptyLayoutOption))
             {
-                if (System.IO.File.Exists(m_FilePath))
-                {
-                    UploadFileAsync();
-                    //m_FileId = DriveAPI.UploadFile(m_MediaType, m_UploadName, m_FilePath);
-                    //m_FileURL = DriveAPI.GetFileURL(m_FileId);
-                }
-                else
-                {
-                    throw new System.Exception(string.Format("File not found : {0}", m_FilePath));
-                }
+                UploadFileAsync();
             }
+            EditorGUI.EndDisabledGroup();
         }
 
         private async void UploadFileAsync()
@@ -138,9 +170,11 @@ namespace GoogleDriveViewer
             m_FileId = "";
             m_FileURL = "";
 
+            var filePath = AssetDatabase.GetAssetPath(m_UploadAsset);
             await Task.Run(() =>
             {
-                m_FileId = DriveAPI.UploadFile(m_MediaType, m_UploadName, m_FilePath);
+                var mediaType = MediaSettings.GetMediaType(filePath);
+                m_FileId = DriveAPI.UploadFile(mediaType, m_UploadName, filePath);
                 m_FileURL = DriveAPI.GetFileURL(m_FileId);
             });
             Repaint();

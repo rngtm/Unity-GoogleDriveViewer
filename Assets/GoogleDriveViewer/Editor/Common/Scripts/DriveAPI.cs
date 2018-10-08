@@ -13,7 +13,7 @@ using Google.Apis.Download;
 
 namespace GoogleDriveViewer
 {
-    public class DriveAPI
+    public static class DriveAPI
     {
         public static string GetFileURL(string fileId)
         {
