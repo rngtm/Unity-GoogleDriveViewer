@@ -21,8 +21,10 @@ namespace GoogleDriveViewer
                 m_TreeView = new FileTreeView();
             }
 
+            EditorGUI.BeginDisabledGroup(m_TreeView.IsGettingFiles | m_TreeView.IsDeletingFiles);
             DrawHeader();
             CustomUI.RenderTable(m_TreeView, ref m_TableScroll);
+            EditorGUI.EndDisabledGroup();
         }
 
         private void DrawHeader()
@@ -30,7 +32,7 @@ namespace GoogleDriveViewer
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             if (GUILayout.Button("GET Files", EditorStyles.toolbarButton))
             {
-                m_TreeView.ReloadFiles();
+                m_TreeView.ReloadFilesAsync();
             }
             GUILayout.FlexibleSpace();
 

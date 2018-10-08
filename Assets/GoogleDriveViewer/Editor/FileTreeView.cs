@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -24,7 +26,11 @@ namespace GoogleDriveViewer
         static readonly string SortedColumnIndexStateKey = "AssetStoreImporterTreeView_sortedColumnIndex";
         static readonly int DefaultSortedColumnIndex = 1;
         public IReadOnlyList<TreeViewItem> CurrentBindingItems;
-        private Action<int> m_DeleteFileAction;
+        private bool m_IsGettingFiles = false;
+        private bool m_IsDeletingFiles = false;
+
+        public bool IsGettingFiles => m_IsGettingFiles;
+        public bool IsDeletingFiles => m_IsDeletingFiles;
 
         public FileTreeView() // constructer
             : this(new TreeViewState(), new MultiColumnHeader(new MultiColumnHeaderState(new[]
@@ -54,13 +60,23 @@ namespace GoogleDriveViewer
             header.sortedColumnIndex = SessionState.GetInt(SortedColumnIndexStateKey, DefaultSortedColumnIndex);
         }
 
-        public void ReloadFiles()
+        public async void ReloadFilesAsync()
         {
-            var files = DriveAPI.GetFiles();
-            if (files != null && files.Count > 0)
+            m_IsGettingFiles = true;
+
+            await Task.Run(() =>
             {
-                RegisterFiles(files);
-            }
+                var files = DriveAPI.GetFiles();
+                if (files != null && files.Count > 0)
+                {
+                    RegisterFiles(files);
+                }
+            });
+
+            m_IsGettingFiles = false;
+            SetSelection(new int[0]); // cancel selection
+
+            Repaint();
         }
 
         protected override void RowGUI(RowGUIArgs args) // draw gui
@@ -104,8 +120,7 @@ namespace GoogleDriveViewer
             return root;
         }
 
-
-        public void RegisterFiles(IList<File> files)
+        private void RegisterFiles(IList<File> files)
         {
             var root = new TreeViewItem { depth = -1 };
             var children = new List<TreeViewItem>();
@@ -123,7 +138,11 @@ namespace GoogleDriveViewer
 
             CurrentBindingItems = children;
             root.children = CurrentBindingItems as List<TreeViewItem>;
-            Reload();
+
+            EditorApplication.delayCall += () => // main thread
+            {
+                Reload();
+            };
         }
 
         public void ClearTreeItems()
@@ -133,7 +152,11 @@ namespace GoogleDriveViewer
 
             CurrentBindingItems = children;
             root.children = CurrentBindingItems as List<TreeViewItem>;
-            Reload();
+
+            EditorApplication.delayCall += () => // main thread
+            {
+                Reload();
+            };
         }
 
 
@@ -173,63 +196,40 @@ namespace GoogleDriveViewer
             BuildRows(rootItem);
         }
 
-        public void RegisterDeleteFileAction(Action<int> action)
-        {
-            m_DeleteFileAction = action;
-        }
-
         protected override void ContextClickedItem(int id)
         {
             base.ContextClickedItem(id);
-            var selection = GetSelection();
-            if (selection.Count == 0) { return; }
 
             GenericMenu menu = new GenericMenu();
             menu.AddItem(new GUIContent("ファイルを削除"), false, () =>
             {
-                TryDeleteFile(id);
+                var ids = GetSelection();
+                bool ok = EditorUtility.DisplayDialog(
+                    "ファイルの削除",
+                    GetDeleteDialogMessage(ids),
+                    "削除する", "やめる"
+                    );
+                if (!ok) { return; }
 
-                //if (selection.Count == 1)
-                //{
-                //    TryDeleteFile(id);
-                //}
-                //else
-                //{
-                //    TryDeleteFiles(selection); // 複数削除
-                //}
+                DeleteAsync(ids);
             });
+
             menu.ShowAsContext();
         }
 
-        private void TryDeleteFile(int id)
+        private async void DeleteAsync(IList<int> ids)
         {
-            var item = (FileTreeViewItem)GetRows()[id];
-            bool ok = EditorUtility.DisplayDialog(
-                "ファイルの削除",
-                string.Format("ファイル \'{0}\'を削除しますか? \n(ファイルID :{1})", item.FileName, item.FileId),
-                "削除する", "やめる"
-                );
-            if (!ok) { return; }
+            m_IsDeletingFiles = true;
 
-            DriveAPI.DeleteFile(item.FileId);
-            Debug.LogFormat("Delete : {0}", item.FileId);
-
-            ClearTreeItems();
-            EditorApplication.delayCall += () =>
+            await Task.Run(() =>
             {
-                ReloadFiles();
-            };
+                TryDeleteFiles(ids); // 複数削除
+            });
+            m_IsDeletingFiles = false;
         }
 
         private void TryDeleteFiles(IList<int> ids)
         {
-            bool ok = EditorUtility.DisplayDialog(
-                "ファイルの削除",
-                string.Format("{0}個のファイルを削除しますか? ", ids.Count),
-                "削除する", "やめる"
-                );
-            if (!ok) { return; }
-
             foreach (var id in ids)
             {
                 var item = (FileTreeViewItem)GetRows()[id];
@@ -237,11 +237,31 @@ namespace GoogleDriveViewer
                 Debug.LogFormat("Delete: {0} ({1})", item.FileName, item.FileId);
             }
 
-            ClearTreeItems();
             EditorApplication.delayCall += () =>
             {
-                ReloadFiles();
+                ReloadFilesAsync();
             };
+        }
+
+        private string GetDeleteDialogMessage(IList<int> ids)
+        {
+            int counter = 0;
+            var message = new StringBuilder();
+            message.AppendFormat("{0}個のファイルを削除しますか?\n", ids.Count);
+            const int ShowFileCount = 3;
+            foreach (var id in ids)
+            {
+                if (counter >= ShowFileCount)
+                {
+                    message.AppendFormat("他{0}個のファイル\n", ids.Count - ShowFileCount);
+                    break;
+                }
+
+                var item = (FileTreeViewItem)GetRows()[id];
+                message.AppendFormat("・{0}\n", item.FileName, item.FileId);
+                counter++;
+            }
+            return message.ToString();
         }
     }
 }
