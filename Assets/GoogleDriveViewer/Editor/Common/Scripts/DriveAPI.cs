@@ -169,7 +169,7 @@ namespace GoogleDriveViewer
             var folderId = folders.First().Id;
             listRequest.Q = $"('{folderId}' in parents) and (mimeType != 'application/vnd.google-apps.folder') and (trashed = false)";
             listRequest.PageSize = Settings.MaxFileCount; // 取得するファイルの最大数の指定
-            listRequest.Fields = "nextPageToken, files(id, name)";
+            listRequest.Fields = "nextPageToken, files(id, name, mimeType)";
 
             // ファイル一覧の取得
             return listRequest.Execute().Files;
