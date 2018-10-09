@@ -76,6 +76,25 @@ namespace GoogleDriveViewer
             Repaint();
         }
 
+        public async void ReloadFilesInFolderAsync(string folderName)
+        {
+            IsGettingFile = true;
+
+            await Task.Run(() =>
+            {
+                var files = DriveAPI.GetFilesInFolder(folderName);
+                if (files != null && files.Count > 0)
+                {
+                    RegisterFiles(files);
+                }
+            });
+
+            IsGettingFile = false;
+            SetSelection(new int[0]); // cancel selection
+
+            Repaint();
+        }
+
         protected override void RowGUI(RowGUIArgs args) // draw gui
         {
             var item = args.item as FileTreeViewItem;

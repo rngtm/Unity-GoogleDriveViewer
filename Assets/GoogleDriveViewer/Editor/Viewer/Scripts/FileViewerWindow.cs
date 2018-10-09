@@ -27,13 +27,21 @@ namespace GoogleDriveViewer
             EditorGUI.EndDisabledGroup();
         }
 
+        private string m_GetParentFolderName = "";
         private void DrawHeader()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             if (GUILayout.Button("GET Files", EditorStyles.toolbarButton))
             {
-                m_TreeView.ReloadFilesAsync();
+                DoGetFiles();
             }
+
+            GUILayout.Space(12f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Folder", GUILayout.Width(40f));
+            m_GetParentFolderName = EditorGUILayout.TextField(m_GetParentFolderName, GUILayout.Height(15f), GUILayout.Width(60f));
+            EditorGUILayout.EndHorizontal();
+
             GUILayout.FlexibleSpace();
 
             if (GUILayout.Button("GoogleDrive", EditorStyles.toolbarButton))
@@ -44,5 +52,19 @@ namespace GoogleDriveViewer
             EditorGUILayout.EndHorizontal();
         }
 
+        /// <summary>
+        /// ファイル取得の実行
+        /// </summary>
+        private void DoGetFiles()
+        {
+            if (string.IsNullOrEmpty(m_GetParentFolderName))
+            {
+                m_TreeView.ReloadFilesAsync(); // すべてsのファイル取得
+            }
+            else
+            {
+                m_TreeView.ReloadFilesInFolderAsync(m_GetParentFolderName); // フォルダ内のファイル取得
+            }
+        }
     }
 }

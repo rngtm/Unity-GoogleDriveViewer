@@ -11,6 +11,7 @@ using File = Google.Apis.Drive.v3.Data.File;
 using Debug = UnityEngine.Debug;
 using Google.Apis.Download;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace GoogleDriveViewer
 {
@@ -128,16 +129,50 @@ namespace GoogleDriveViewer
             }
         }
 
+        /// <summary>
+        /// 指定したフォルダの中にあるファイル一覧を取得します
+        /// </summary>
         public static IList<File> GetFiles()
         {
             DriveService drive = OpenDrive();
 
             // Define parameters of request.
             FilesResource.ListRequest listRequest = drive.Files.List();
-            listRequest.PageSize = 100;
+            listRequest.PageSize = Settings.MaxFileCount; // 取得するファイルの最大数の指定
 
             IList<File> files = listRequest.Execute().Files;
             return files;
+        }
+
+        /// <summary>
+        /// 指定したフォルダの中にあるファイル一覧を取得します
+        /// </summary>
+        public static IList<File> GetFilesInFolder(string folderName) 
+        {
+            var service = OpenDrive();
+
+            var listRequest = service.Files.List();
+            listRequest.PageSize = 1;
+
+            // 取得するフォルダの条件をクエリ構文で指定
+            listRequest.Q = $"(name = '{folderName}') and (mimeType = 'application/vnd.google-apps.folder') and (trashed = false)";
+            listRequest.Fields = "nextPageToken, files(id)";
+
+            // フォルダの取得
+            var folders = listRequest.Execute().Files;
+            if (folders == null || folders.Count == 0)
+            {
+                throw new System.Exception($"Folder not found: {folderName}");
+            }
+
+            // フォルダの下に含まれるファイルを取得
+            var folderId = folders.First().Id;
+            listRequest.Q = $"('{folderId}' in parents) and (mimeType != 'application/vnd.google-apps.folder') and (trashed = false)";
+            listRequest.PageSize = Settings.MaxFileCount; // 取得するファイルの最大数の指定
+            listRequest.Fields = "nextPageToken, files(id, name)";
+
+            // ファイル一覧の取得
+            return listRequest.Execute().Files;
         }
     }
 }

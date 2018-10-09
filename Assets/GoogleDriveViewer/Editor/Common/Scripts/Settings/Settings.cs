@@ -12,7 +12,7 @@ namespace GoogleDriveViewer
             return UnityEngine.Application.dataPath; // Assets直下
         }
     }
-
+    
     internal static class Settings
     {
         /// <summary>
@@ -30,6 +30,11 @@ namespace GoogleDriveViewer
         /// 認証情報の作成先のパス
         /// </summary>
         public readonly static string CREDENTIAL_PATH = ".credentials/drive-dotnet-Demo";
+
+        /// <summary>
+        /// GET時に取得するファイルの最大数
+        /// </summary>
+        public const int MaxFileCount = 100;
 
         public readonly static string[] Scopes = { DriveService.Scope.Drive };
 
