@@ -39,9 +39,10 @@ namespace GoogleDriveViewer
             new MediaBinding(EMediaType.MP4  , "video/mp4", "video/mp4", ".mp4"  ),
             new MediaBinding(EMediaType.MP3  , "audio/mp3", "audio/mp3", ".mp3"  ),
             new MediaBinding(EMediaType.ZIP  , "application/zip", "application/zip", ".zip"  ),
-            //new MediaBinding(EMediaType.EXCEL, "vnd.ms-excel", "application/vnd.google-apps.spreadsheet", ".xlsx" ),
+            new MediaBinding(EMediaType.EXCEL, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                "application/vnd.google-apps.spreadsheet", ".xlsx" ),
         };
-
+        
         static Dictionary<EMediaType, string> LocalMediaToMime
             = MediaBindings.ToDictionary(item => item.MediaType, item => item.LocalMimeType);
         static Dictionary<string, EMediaType> LocalMimeToMedia

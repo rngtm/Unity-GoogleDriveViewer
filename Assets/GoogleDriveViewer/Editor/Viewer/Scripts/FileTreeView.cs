@@ -271,8 +271,19 @@ namespace GoogleDriveViewer
             var savePath = System.IO.Path.Combine(DownloadSettings.GetDownloadFolderPath(), fileName);
 
             IsDownloadingFile = true;
-            Debug.Log("Download start: " + fileName);
-            await DriveAPI.DownloadFileAsync(item.FileId, savePath);
+            Debug.Log($"Download start: {fileName}");
+
+            switch (mediaType)
+            {
+                case EMediaType.EXCEL: // is document
+                    string localMime = MediaSettings.GetLocalMimeFromMedia(mediaType);
+                    await DriveAPI.DownloadDocumentAsync(item.FileId, savePath, localMime);
+                    break;
+                default: // is not document
+                    await DriveAPI.DownloadFileAsync(item.FileId, savePath);
+                    break;
+            }
+
             IsDownloadingFile = false;
 
             Debug.LogFormat("Download end: File saved to: {0}", savePath);

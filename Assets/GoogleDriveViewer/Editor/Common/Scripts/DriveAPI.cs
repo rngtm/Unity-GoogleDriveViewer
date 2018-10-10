@@ -22,12 +22,18 @@ namespace GoogleDriveViewer
             return string.Format("https://drive.google.com/open?id={0}", fileId);
         }
 
+        /// <summary>
+        /// ファイルを削除します
+        /// </summary>
         public static string DeleteFile(string fileId)
         {
             FilesResource.DeleteRequest request = OpenDrive().Files.Delete(fileId);
             return request.Execute();
         }
 
+        /// <summary>
+        /// ファイルをダウンロードします
+        /// </summary>
         public static async Task DownloadFileAsync(string fileId, string savePath)
         {
             var service = OpenDrive();
@@ -38,27 +44,23 @@ namespace GoogleDriveViewer
             }
         }
 
-        public static async void CreateFileAsync(string filePath, long data)
+        /// <summary>
+        /// ドキュメントをダウンロードします
+        /// </summary>
+        public static async Task DownloadDocumentAsync(string fileId, string savePath, string mimeType)
         {
-            await Task.Run(() =>
+            var service = OpenDrive();
+            var request = service.Files.Export(fileId, mimeType);
+
+            using (var fs = new System.IO.FileStream(savePath, System.IO.FileMode.Create, System.IO.FileAccess.Write))
             {
-                CreateFile(filePath, data);
-            });
+                await request.DownloadAsync(fs);
+            }
         }
 
-        private static void CreateFile(string filePath, long data)
-        {
-            FileStream fs = new FileStream(filePath, FileMode.Create);
-            BinaryWriter bw = new BinaryWriter(fs);
-            bw.Write(data);
-
-            bw.Close();
-            fs.Close();
-
-            Debug.LogFormat("Save to {0}", filePath);
-            Process.Start(System.IO.Directory.GetParent(filePath).FullName);
-        }
-
+        /// <summary>
+        /// ファイルをアップロードします
+        /// </summary>
         public static string UploadFile(EMediaType type, string uploadName, string filePath)
         {
             DriveService drive = OpenDrive();
